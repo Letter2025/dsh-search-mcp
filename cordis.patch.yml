@@ -27,9 +27,7 @@
         servers:
           - id: tavily
             kind: tavily
-            url: 'https://mcp.tavily.com/mcp/'
             apiKeyEnv: TAVILY_API_KEY
-            toolName: tavily_search
 
 - id: web
   config:
@@ -51,3 +49,4 @@
     fetch: false
     searchTimeoutMs: 60000
     searchMaxResults: 50
+    searchMaxQueries: 4
