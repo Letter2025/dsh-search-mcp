@@ -32,6 +32,9 @@
 - id: web
   config:
     searchProvider: search-mcp
+    # Whole-row replace: the built-in http fetcher must be restated or the
+    # fetchProvider reset to auto-select (dsh-web row replacement semantics).
+    fetchProvider: http
 
 - id: web-search-deepseek
   disabled: true
