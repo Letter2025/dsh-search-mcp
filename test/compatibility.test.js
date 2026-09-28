@@ -7,67 +7,40 @@ import { fileURLToPath } from 'node:url';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const read = (path) => readFile(resolve(root, path), 'utf8');
 
-test('package exports resolve and dependencies follow the 0.1.2 host model', async () => {
+test('package exports resolve and dependencies follow the 0.1.7 host model', async () => {
   const pkg = JSON.parse(await read('package.json'));
   assert.equal(pkg.exports['.'], './lib/index.js');
-  assert.equal(pkg.exports['./client'], './lib/client.browser.js');
+  assert.equal(pkg.exports['./client'], undefined);
   assert.equal(pkg.engines.node, '>=20');
 
-  // Host-provided packages are peers pinned to 0.1.2-rc.1; runtime-only
+  // Host-provided packages are peers pinned to 0.1.7-rc.2; runtime-only
   // protocol dependencies stay in `dependencies`.
   for (const name of [
-    '@deepseek-ai/dsh-api-remotes',
     '@deepseek-ai/dsh-credentials',
     '@deepseek-ai/dsh-launch-environment',
-    '@deepseek-ai/dsh-settings',
     '@deepseek-ai/dsh-web',
   ]) {
     assert.equal(pkg.dependencies[name], undefined);
-    assert.equal(pkg.peerDependencies[name], '^0.1.2-rc.1');
+    assert.equal(pkg.peerDependencies[name], '^0.1.7-rc.2');
   }
   assert.equal(pkg.dependencies.undici, '6.28.0');
   assert.equal(pkg.dependencies['ipaddr.js'], '2.5.0');
   assert.equal(pkg.dependencies['@modelcontextprotocol/sdk'], '1.30.0');
 
-  // The client inject list names only 0.1.2 graph rows; the removed
-  // dsh-client-runtime must not appear.
-  assert.deepEqual(pkg.dsh.client.inject, [
-    '@deepseek-ai/dsh-api-remotes',
-    '@deepseek-ai/dsh-client-locale',
-    '@deepseek-ai/dsh-client-ui-settings',
-  ]);
-  assert.equal(pkg.dsh.client.platform, 'web');
+  // dsh 0.1.7 dropped the settings owner seam and the document-backed
+  // settings card; the plugin owns no browser half anymore.
+  assert.equal(pkg.dsh.client, undefined);
+  assert.equal(pkg.peerDependencies['@deepseek-ai/dsh-settings'], undefined);
+  assert.equal(pkg.peerDependencies['@deepseek-ai/dsh-api-remotes'], undefined);
 });
 
-test('0.1.2 browser bundle: settingsScope card, keyed slot, module-table-only requires', async () => {
-  const client = await read('lib/client.browser.js');
-  assert.match(client, /settingsScope\.bind\(\{\s*namespace: NS\s*\}\)/);
-  assert.match(client, /name: "settings\.plugin\.item",\s+key: NS,/);
-  assert.doesNotMatch(client, /api\.settings\.describe/);
-  assert.doesNotMatch(client, /@deepseek-ai\/dsh-client-runtime/);
-  // The only external is the module table's react word.
-  assert.deepEqual([...client.matchAll(/require\("([^"]+)"\)/g)].map((match) => match[1]), ['react']);
-  assert.match(client, /window\.__ModuleLoader__\.load\s*\(\s*\{\s*id: "dsh-search-mcp"/);
-  assert.match(client, /scope\.set\("servers", next\)/);
-  assert.match(client, /scope\.unset\(field\)/);
-});
-
-test('host half registers the namespace through the rc.1 owner seam', async () => {
+test('host half resolves config from the profile row without a settings scope', async () => {
   const host = await read('lib/index.js');
-  assert.match(host, /export const inject = \['web', 'settings'\]/);
-  assert.match(host, /settings\.register\(SEARCH_MCP_SETTINGS_NAMESPACE, Config, \{/);
-  assert.match(host, /base: config/);
-  // The removed settings entry points must not be imported anymore.
+  assert.match(host, /export const inject = \['web'\]/);
+  assert.match(host, /const current = \(\) => config;/);
+  assert.match(host, /ctx\.web\.registerSearchProvider/);
+  assert.doesNotMatch(host, /settings\.register\(SEARCH_MCP_SETTINGS_NAMESPACE/);
   assert.doesNotMatch(host, /from '@deepseek-ai\/dsh-settings'/);
-  assert.doesNotMatch(host, /settingsNamespace\(/);
-});
-
-test('known providers are CDKey-only while custom keeps advanced fields', async () => {
-  const client = await read('lib/client.browser.js');
-  const catalog = client.slice(client.indexOf('const CATALOG = {'), client.indexOf('const KNOWN_KINDS'));
-  assert.doesNotMatch(catalog, /https?:\/\//);
-  assert.doesNotMatch(catalog, /toolName|authParam|transport/);
-  assert.match(client, /const isCustom = server\.kind === "custom"/);
 });
 
 test('HTTP transport pins DNS and applies one guarded fetch to every SDK request', async () => {

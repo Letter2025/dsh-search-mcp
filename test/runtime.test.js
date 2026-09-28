@@ -5,28 +5,9 @@ import { extractSearchResult } from '../lib/extract.js';
 import { SEARCH_MCP_PROVIDER_ID } from '../lib/provider.js';
 import { apply } from '../lib/index.js';
 
-test('apply registers the rc.1 settings namespace and the web provider', () => {
-  let registered;
+test('apply registers the web provider with the profile-row config', () => {
   let captured;
-  const resolved = {
-    servers: [{ id: 'tavily', kind: 'tavily', apiKeyEnv: 'TAVILY_API_KEY' }],
-    defaultServer: 'tavily',
-    maxResults: 8,
-    searchTimeoutMs: 30000,
-  };
-  const scope = {
-    get: () => resolved,
-    watch: () => () => {},
-    update: async () => {},
-    replace: async () => {},
-  };
   const ctx = {
-    settings: {
-      register: (ns, schema, options) => {
-        registered = { ns, schema, options };
-        return scope;
-      },
-    },
     web: {
       registerSearchProvider: (provider) => {
         captured = provider;
@@ -34,10 +15,13 @@ test('apply registers the rc.1 settings namespace and the web provider', () => {
     },
   };
 
-  apply(ctx, { servers: [{ id: 'tavily', kind: 'tavily', apiKeyEnv: 'TAVILY_API_KEY' }] });
+  apply(ctx, {
+    servers: [{ id: 'tavily', kind: 'tavily', apiKeyEnv: 'TAVILY_API_KEY' }],
+    defaultServer: 'tavily',
+    maxResults: 8,
+    searchTimeoutMs: 30000,
+  });
 
-  assert.equal(registered.ns, 'search-mcp');
-  assert.equal(registered.options.base.servers[0].kind, 'tavily');
   assert.ok(captured);
   assert.equal(captured.id, SEARCH_MCP_PROVIDER_ID);
   assert.equal(captured.available(), true);
