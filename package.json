@@ -1,5 +1,5 @@
 {
-  "name": "dsh-search-mcp",
+  "name": "@letter2025/dsh-search-mcp",
   "version": "0.3.1",
   "description": "Replace dsh's built-in web search with search MCP servers (Tavily / Brave / Exa / Perplexity / DuckDuckGo / custom). The plugin's Config row is rendered by dsh's auto-generated settings page, so server lists and keys live in the profile config; when enabled the built-in DeepSeek search provider is disabled.",
   "type": "module",
@@ -14,6 +14,11 @@
     "cordis.patch.yml"
   ],
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Letter2025/dsh-search-mcp.git"
+  },
+  "homepage": "https://github.com/Letter2025/dsh-search-mcp#readme",
   "engines": {
     "node": ">=20"
   },

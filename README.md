@@ -1,4 +1,4 @@
-# dsh-search-mcp
+# @letter2025/dsh-search-mcp
 
 用搜索类 MCP 服务器完整替代 DeepSeek Harness（DSH）内置网页搜索的独立插件。
 
@@ -19,10 +19,15 @@
 ## 安装
 
 ```powershell
+# 从 npm 安装（推荐）
+dsh plugin --profile web add @letter2025/dsh-search-mcp
+dsh web
+
+# 或本地源码 + link:，改完即时生效
 git clone https://github.com/Letter2025/dsh-search-mcp.git
 cd dsh-search-mcp
 npm install
-dsh plugin --profile web add link:<dsh-search-mcp 的绝对路径>
+dsh plugin --profile web add link:<仓库的绝对路径>
 dsh web
 ```
 
@@ -173,7 +178,7 @@ dsh --profile web --dump-config |
 ## 卸载
 
 ```powershell
-dsh plugin --profile web remove dsh-search-mcp
+dsh plugin --profile web remove @letter2025/dsh-search-mcp
 ```
 
 随后重启 DSH Web。不要只禁用 `search-mcp` 行，因为 bundle 还覆盖了 `web`、`web-search-deepseek` 和 `tool-web`；完整卸载 bundle 才会恢复内置组合。

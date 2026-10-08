@@ -1,4 +1,4 @@
-# dsh-search-mcp bundle layer: applied after dsh-base and dsh-web-app,
+# @letter2025/dsh-search-mcp bundle layer: applied after dsh-base and dsh-web-app,
 # before the profile's own cordis.patch.yml (last write wins per row).
 #
 # Installing this package therefore REPLACES dsh's built-in web search:
@@ -9,7 +9,7 @@
 # execution now goes through the search MCP server(s) configured below or in
 # the web Settings → Plugins → search-mcp section.
 #
-# Removing this package (dsh plugin --profile web remove dsh-search-mcp)
+# Removing this package (dsh plugin --profile web remove @letter2025/dsh-search-mcp)
 # drops this whole layer and restores the built-in search exactly.
 #
 # SECURITY: no API keys are committed to this repository. Server keys are
@@ -19,7 +19,7 @@
 
 - insert:
     - id: search-mcp
-      name: 'dsh-search-mcp'
+      name: '@letter2025/dsh-search-mcp'
       config:
         defaultServer: tavily
         maxResults: 8
