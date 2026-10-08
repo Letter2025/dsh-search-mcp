@@ -2,7 +2,9 @@
 
 用搜索类 MCP 服务器完整替代 DeepSeek Harness（DSH）内置网页搜索的独立插件。
 
-> 当前兼容基线：DeepSeek Harness `0.1.1-rc.2`，Node.js 20 或更高版本。
+> 当前兼容基线：DeepSeek Harness `0.2.0-rc.2`，Node.js 20 或更高版本。
+>
+> 本仓库基于 [gxpppp/dsh-search-mcp](https://github.com/gxpppp/dsh-search-mcp) 继续维护，并适配 dsh 0.2.0-rc.2。
 
 ## 功能
 
@@ -10,21 +12,21 @@
 - 支持 Tavily、Brave、Exa、Perplexity、DuckDuckGo 和自定义 HTTP/stdio MCP。
 - 已知 provider 只需选择服务商并填写 CDKey/API key，不需要填写 URL、命令、鉴权参数或工具名。
 - 自定义 MCP 保留 URL、stdio 命令、鉴权方式和工具名等高级配置。
-- 密钥通过 DSH credentials domain 写入；设置读取接口只返回是否已配置，不返回密钥值。
+- 密钥写在插件行的 secret 字段，或只填引用名交由 DSH credentials domain / 启动环境变量在搜索时解析；密钥值不会出现在普通设置字段中。
 - DSH RC2 支持一次 `web_search` 提交多个查询，默认上限为 4。
 - 卸载插件后 bundle 覆盖层随之移除，DSH 内置搜索组合恢复。
 
 ## 安装
 
 ```powershell
-git clone https://github.com/gxpppp/dsh-search-mcp.git
+git clone https://github.com/Letter2025/dsh-search-mcp.git
 cd dsh-search-mcp
 npm install
 dsh plugin --profile web add link:<dsh-search-mcp 的绝对路径>
 dsh web
 ```
 
-`link:` 会让源码更新直接作用于 profile。修改或升级浏览器 bundle 后需要重启 DSH Web 并刷新页面。
+`link:` 会让源码更新直接作用于 profile。插件只有宿主侧代码，改完重启 DSH Web 即可生效。
 
 如果 profile 中已有独立搜索 MCP 行，建议先移除重复入口，避免同时暴露 `mcp__...` 工具和本插件提供的 `web_search`。
 
@@ -41,7 +43,7 @@ dsh web
 3. 对需要凭据的 provider 填写 CDKey/API key，然后保存。
 4. DuckDuckGo 无需 key。
 
-已知 provider 的 endpoint、transport、鉴权方式、工具名和结果参数由 Host catalog 固定管理，设置页不会自动填入或显示链接。保存 CDKey 后，客户端先调用 `credentials.set`，再将生成的 credential reference 写入服务器设置；密钥本身不会写回普通 settings 字段。
+已知 provider 的 endpoint、transport、鉴权方式、工具名和结果参数由 Host catalog 固定管理，设置页只显示服务商、ID、结果数和密钥字段。CDKey/API key 直接保存在插件行的 secret 字段；也可以只填 `apiKeyEnv` 引用名，搜索时按 内联 `apiKey` → credentials domain → 启动环境变量 的顺序解析。
 
 也可以预先在 `$DSH_HOME/.credentials.yaml` 中保存凭据，再在设置页填写引用名：
 
@@ -52,7 +54,7 @@ PERPLEXITY_API_KEY: <your-key>
 BRAVE_API_KEY: <your-key>
 ```
 
-RC2 的 `credentials/reference-updated` 事件会刷新设置卡片中的“已配置/未配置”状态，但不会传输密钥值。卡片按 RC2 每批最多 64 个引用的限制分批读取状态。保存多个字段失败时会逆序恢复已写入的 settings，并清理本次新建的 credential reference；由于 RC2 不允许读回已有密钥，覆盖一个此前已配置的引用后无法跨 credentials/settings 做值级回滚。
+凭据在每次搜索时按需解析，插件不缓存密钥值，也不会把密钥写回普通设置字段。
 
 ### 自定义 MCP
 
@@ -94,14 +96,12 @@ RC2 的 `credentials/reference-updated` 事件会刷新设置卡片中的“已�
 
 插件在调用 known provider 前会把结果数限制到上游 MCP schema 接受的范围：Tavily 为 5–20，Brave、Perplexity 和 DuckDuckGo 为 1–20；Exa 当前保留插件的 1–50 范围。该限制只影响传给上游的参数，最终返回数量仍会受到插件全局/单服务器限制和实际 agent preset 的 `tool-web.searchMaxResults` 共同约束。
 
-## DSH 0.1.1-rc.2 适配
+## DSH 0.2.0-rc.2 适配
 
-- DSH host 依赖精确锁定为 `0.1.1-rc.2`，不使用可能落到旧版本线的子包 `latest`。
-- 设置卡片继续使用 keyed slot：`settings.plugin.item` + `key: "search-mcp"`。
-- 新密钥通过 `credentials.set` 单向写入，凭据状态通过 `credentials.describe` 读取。
-- 监听 RC2 的 `credentials/reference-updated`，外部凭据变更后刷新状态 badge。
-- RC6/RC7 遗留的字面 `apiKey` 仍可由 Host 使用；涉及服务器数组的编辑会阻止不可见旧密钥被意外删除，并要求先迁移。
-- 普通全局字段修改不会重写 `servers` 数组。
+- 宿主依赖按 peer 锁定 `^0.2.0-rc.2`（cordis `~4.0.4`、schemastery `^3.18.4`），不使用可能落到旧版本线的子包 `latest`。
+- 插件只有宿主半边：dsh 0.1.7 起设置页按插件 Config schema 自动生成表单，`dsh.client`、`./client` 导出与浏览器 bundle 均已删除。
+- 插件行的 profile 配置（bundle patch + profile 覆盖）是唯一配置来源；设置页保存会重载插件实例，`apply` 收到新配置。
+- 密钥字段用 `role('secret')`、引用名用 `role('credential-ref')`；解析顺序为内联 `apiKey` → DSH credentials domain → 启动环境变量。
 - `tool-web.searchMaxQueries` 配置为 4，与 RC2 默认多查询能力一致。
 
 ## URL 安全策略
@@ -139,7 +139,7 @@ npm run check
 npm pack --dry-run
 ```
 
-自动测试覆盖 RC2 依赖锁定、known/custom catalog 边界、CDKey-only 设置结构、凭据事件、旧 secret 保护、结果归一化，以及 URL/DNS/pinning 安全策略。
+自动测试（`npm test`，20 个用例）覆盖 0.2.0-rc.2 依赖锁定与宿主 config 解析、known/custom catalog 边界、provider 契约与结果数上限、结果归一化，以及 URL/DNS/pinning 安全策略。
 
 2026-08-30 的隔离 RC2 Web 冒烟检查确认：插件卡片可加载；默认 Tavily 行不显示链接或高级连接字段；DuckDuckGo 摘要显示“无需密钥”，展开后只有 ID、provider 和结果数；测试草稿已放弃且没有写入 settings。无密钥 DuckDuckGo stdio server 能启动并收到正确的 `duckduckgo_web_search`/`count` 调用，但当次公开搜索被 DuckDuckGo 上游异常流量检测拒绝，因此未取得可用于结果归一化验收的真实来源。
 
@@ -167,7 +167,7 @@ dsh --profile web --dump-config |
 - `defaultServer "x" is not configured`：默认 id 没有匹配任何服务器行。
 - `URL policy` 拒绝：endpoint 非 HTTP(S)，或 DNS 结果包含本地、私有、保留/测试地址。
 - stdio 启动失败：确认 Node/npm 可用，且运行环境允许 `npx` 获取或执行对应 MCP 包。
-- 设置页没有 Search MCP 卡片：确认 client bundle 已安装，重启 DSH Web 后强制刷新页面。
+- 设置页没有 Search MCP 表单：确认 profile 中的插件行已启用（`dsh --profile <profile> --dump-config`），然后重启 DSH Web。
 - 返回结果仍被截断：检查实际 agent preset 中的 `tool-web.searchMaxResults`，以及全局/单服务器 `maxResults`。
 
 ## 卸载
