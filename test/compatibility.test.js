@@ -7,13 +7,13 @@ import { fileURLToPath } from 'node:url';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const read = (path) => readFile(resolve(root, path), 'utf8');
 
-test('package exports resolve and dependencies follow the 0.1.7 host model', async () => {
+test('package exports resolve and dependencies follow the 0.2.0 host model', async () => {
   const pkg = JSON.parse(await read('package.json'));
   assert.equal(pkg.exports['.'], './lib/index.js');
   assert.equal(pkg.exports['./client'], undefined);
   assert.equal(pkg.engines.node, '>=20');
 
-  // Host-provided packages are peers pinned to 0.1.7-rc.2; runtime-only
+  // Host-provided packages are peers pinned to 0.2.0-rc.2; runtime-only
   // protocol dependencies stay in `dependencies`.
   for (const name of [
     '@deepseek-ai/dsh-credentials',
@@ -21,7 +21,7 @@ test('package exports resolve and dependencies follow the 0.1.7 host model', asy
     '@deepseek-ai/dsh-web',
   ]) {
     assert.equal(pkg.dependencies[name], undefined);
-    assert.equal(pkg.peerDependencies[name], '^0.1.7-rc.2');
+    assert.equal(pkg.peerDependencies[name], '^0.2.0-rc.2');
   }
   assert.equal(pkg.dependencies.undici, '6.28.0');
   assert.equal(pkg.dependencies['ipaddr.js'], '2.5.0');

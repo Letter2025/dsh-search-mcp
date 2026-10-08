@@ -1,6 +1,6 @@
 {
   "name": "dsh-search-mcp",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Replace dsh's built-in web search with search MCP servers (Tavily / Brave / Exa / Perplexity / DuckDuckGo / custom). The plugin's Config row is rendered by dsh's auto-generated settings page, so server lists and keys live in the profile config; when enabled the built-in DeepSeek search provider is disabled.",
   "type": "module",
   "main": "lib/index.js",
@@ -46,16 +46,16 @@
   "peerDependencies": {
     "@deepseek-ai/cordis": "~4.0.4",
     "@deepseek-ai/schemastery": "*",
-    "@deepseek-ai/dsh-credentials": "^0.1.7-rc.2",
-    "@deepseek-ai/dsh-launch-environment": "^0.1.7-rc.2",
-    "@deepseek-ai/dsh-web": "^0.1.7-rc.2"
+    "@deepseek-ai/dsh-credentials": "^0.2.0-rc.2",
+    "@deepseek-ai/dsh-launch-environment": "^0.2.0-rc.2",
+    "@deepseek-ai/dsh-web": "^0.2.0-rc.2"
   },
   "devDependencies": {
     "@deepseek-ai/cordis": "~4.0.4",
-    "@deepseek-ai/dsh-credentials": "0.1.7-rc.2",
-    "@deepseek-ai/dsh-launch-environment": "0.1.7-rc.2",
-    "@deepseek-ai/dsh-llm": "0.1.7-rc.2",
-    "@deepseek-ai/dsh-web": "0.1.7-rc.2",
+    "@deepseek-ai/dsh-credentials": "0.2.0-rc.2",
+    "@deepseek-ai/dsh-launch-environment": "0.2.0-rc.2",
+    "@deepseek-ai/dsh-llm": "0.2.0-rc.2",
+    "@deepseek-ai/dsh-web": "0.2.0-rc.2",
     "@deepseek-ai/schemastery": "^3.18.4"
   }
 }
