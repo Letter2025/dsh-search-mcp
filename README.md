@@ -2,9 +2,9 @@
 
 用搜索类 MCP 服务器完整替代 DeepSeek Harness（DSH）内置网页搜索的独立插件。
 
-> 当前兼容基线：DeepSeek Harness `0.2.1-rc.2`，Node.js 20 或更高版本。
+> 当前兼容基线：DeepSeek Harness `0.2.1-rc.4` 与 `0.2.2-alpha.2`（同一 peer 范围 `^0.2.1-rc.4 || ^0.2.2-alpha.2`；`0.2.1-rc.2` 及更早不再声明支持），Node.js 20 或更高版本。
 >
-> 本仓库基于 [gxpppp/dsh-search-mcp](https://github.com/gxpppp/dsh-search-mcp) 继续维护，并适配 dsh 0.2.1-rc.2。
+> 本仓库基于 [gxpppp/dsh-search-mcp](https://github.com/gxpppp/dsh-search-mcp) 继续维护，并适配 dsh 0.2.1-rc.4 / 0.2.2-alpha.2。
 
 ## 功能
 
@@ -101,9 +101,9 @@ BRAVE_API_KEY: <your-key>
 
 插件在调用 known provider 前会把结果数限制到上游 MCP schema 接受的范围：Tavily 为 5–20，Brave、Perplexity 和 DuckDuckGo 为 1–20；Exa 当前保留插件的 1–50 范围。该限制只影响传给上游的参数，最终返回数量仍会受到插件全局/单服务器限制和实际 agent preset 的 `tool-web.searchMaxResults` 共同约束。
 
-## DSH 0.2.1-rc.2 适配
+## DSH 0.2.1-rc.4 / 0.2.2-alpha.2 适配
 
-- 宿主依赖按 peer 锁定 `^0.2.1-rc.2`（cordis `~4.0.4`、schemastery `^3.18.4`），不使用可能落到旧版本线的子包 `latest`。
+- 宿主依赖按 peer 声明 `^0.2.1-rc.4 || ^0.2.2-alpha.2`（cordis `~4.0.5 || ~4.0.6-alpha.1`、schemastery `*`），不使用可能落到旧版本线的子包 `latest`；0.2.2-alpha.2 把 Schemastery 提到 `~3.18.6-alpha.1`，故 schemastery 不再钉版本。
 - 插件只有宿主半边：dsh 0.1.7 起设置页按插件 Config schema 自动生成表单，`dsh.client`、`./client` 导出与浏览器 bundle 均已删除。
 - 插件行的 profile 配置（bundle patch + profile 覆盖）是唯一配置来源；设置页保存会重载插件实例，`apply` 收到新配置。
 - 密钥字段用 `role('secret')`、引用名用 `role('credential-ref')`；解析顺序为内联 `apiKey` → DSH credentials domain → 启动环境变量。
@@ -144,7 +144,7 @@ npm run check
 npm pack --dry-run
 ```
 
-自动测试（`npm test`，20 个用例）覆盖 0.2.1-rc.2 依赖锁定与宿主 config 解析、known/custom catalog 边界、provider 契约与结果数上限、结果归一化，以及 URL/DNS/pinning 安全策略。
+自动测试（`npm test`，20 个用例）覆盖 0.2.1-rc.4 / 0.2.2-alpha.2 依赖锁定与宿主 config 解析、known/custom catalog 边界、provider 契约与结果数上限、结果归一化，以及 URL/DNS/pinning 安全策略。
 
 2026-08-30 的隔离 RC2 Web 冒烟检查确认：插件卡片可加载；默认 Tavily 行不显示链接或高级连接字段；DuckDuckGo 摘要显示“无需密钥”，展开后只有 ID、provider 和结果数；测试草稿已放弃且没有写入 settings。无密钥 DuckDuckGo stdio server 能启动并收到正确的 `duckduckgo_web_search`/`count` 调用，但当次公开搜索被 DuckDuckGo 上游异常流量检测拒绝，因此未取得可用于结果归一化验收的真实来源。
 
