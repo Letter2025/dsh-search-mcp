@@ -13,15 +13,30 @@ test('package exports resolve and dependencies follow the 0.2.0 host model', asy
   assert.equal(pkg.exports['./client'], undefined);
   assert.equal(pkg.engines.node, '>=20');
 
-  // Host-provided packages are peers covering dsh 0.2.1-rc.4 and 0.2.2-alpha.2;
-  // runtime-only protocol dependencies stay in `dependencies`.
+  // Host-provided packages are peers covering dsh 0.2.1-rc.4, 0.2.2-alpha.2,
+  // and 0.2.2-rc.1; runtime-only protocol dependencies stay in `dependencies`.
   for (const name of [
     '@deepseek-ai/dsh-credentials',
     '@deepseek-ai/dsh-launch-environment',
     '@deepseek-ai/dsh-web',
   ]) {
     assert.equal(pkg.dependencies[name], undefined);
-    assert.equal(pkg.peerDependencies[name], '^0.2.1-rc.4 || ^0.2.2-alpha.2');
+    assert.equal(pkg.peerDependencies[name], '^0.2.1-rc.4 || ^0.2.2-alpha.2 || ^0.2.2-rc.1');
+  }
+  // cordis/schemastery follow their own release lines; both the rc.1 host
+  // versions and the earlier lines stay in the peer range.
+  assert.match(pkg.peerDependencies['@deepseek-ai/cordis'], /~4\.1\.0/);
+  assert.match(pkg.peerDependencies['@deepseek-ai/schemastery'], /~3\.19\.0/);
+  // Dev dependencies pin the host the plugin is developed and smoked against.
+  assert.equal(pkg.devDependencies['@deepseek-ai/cordis'], '~4.1.0');
+  assert.equal(pkg.devDependencies['@deepseek-ai/schemastery'], '~3.19.0');
+  for (const name of [
+    '@deepseek-ai/dsh-credentials',
+    '@deepseek-ai/dsh-launch-environment',
+    '@deepseek-ai/dsh-llm',
+    '@deepseek-ai/dsh-web',
+  ]) {
+    assert.equal(pkg.devDependencies[name], '0.2.2-rc.1');
   }
   assert.equal(pkg.dependencies.undici, '6.28.0');
   assert.equal(pkg.dependencies['ipaddr.js'], '2.5.0');
