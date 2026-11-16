@@ -2,9 +2,9 @@
 
 用搜索类 MCP 服务器完整替代 DeepSeek Harness（DSH）内置网页搜索的独立插件。
 
-> 当前兼容基线：DeepSeek Harness `0.2.1-rc.4`、`0.2.2-alpha.2` 与 `0.2.2-rc.1`（同一 peer 范围 `^0.2.1-rc.4 || ^0.2.2-alpha.2 || ^0.2.2-rc.1`；`0.2.1-rc.2` 及更早不再声明支持），Node.js 20 或更高版本。
+> 当前兼容基线：DeepSeek Harness `0.2.1-rc.4`、`0.2.2-alpha.2`、`0.2.2-rc.1` 与 `0.2.2-rc.3`（同一 peer 范围 `^0.2.1-rc.4 || ^0.2.2-alpha.2 || ^0.2.2-rc.1 || ^0.2.2-rc.3`；`0.2.1-rc.2` 及更早不再声明支持），Node.js 20 或更高版本。
 >
-> 本仓库基于 [gxpppp/dsh-search-mcp](https://github.com/gxpppp/dsh-search-mcp) 继续维护，并适配 dsh 0.2.1-rc.4 / 0.2.2-alpha.2 / 0.2.2-rc.1。
+> 本仓库基于 [gxpppp/dsh-search-mcp](https://github.com/gxpppp/dsh-search-mcp) 继续维护，并适配 dsh 0.2.1-rc.4 / 0.2.2-alpha.2 / 0.2.2-rc.1 / 0.2.2-rc.3。
 
 ## 功能
 
@@ -101,10 +101,11 @@ BRAVE_API_KEY: <your-key>
 
 插件在调用 known provider 前会把结果数限制到上游 MCP schema 接受的范围：Tavily 为 5–20，Brave、Perplexity 和 DuckDuckGo 为 1–20；Exa 当前保留插件的 1–50 范围。该限制只影响传给上游的参数，最终返回数量仍会受到插件全局/单服务器限制和实际 agent preset 的 `tool-web.searchMaxResults` 共同约束。
 
-## DSH 0.2.1-rc.4 / 0.2.2-alpha.2 / 0.2.2-rc.1 适配
+## DSH 0.2.1-rc.4 / 0.2.2-alpha.2 / 0.2.2-rc.1 / 0.2.2-rc.3 适配
 
-- 宿主依赖按 peer 声明 `^0.2.1-rc.4 || ^0.2.2-alpha.2 || ^0.2.2-rc.1`（cordis `~4.0.5 || ~4.0.6-alpha.1 || ~4.1.0`、schemastery `^3.18.0 || ~3.18.6-alpha.1 || ~3.19.0`）。cordis 与 schemastery 走独立发版线，不跟随 dsh 版本号；0.2.2-rc.1 宿主使用 cordis 4.1.0 / schemastery 3.19.0。
-- 0.2.2-rc.1 的 web、credentials、launch-environment 三个宿主包相对 0.2.2-alpha.2 只有版本号变化，插件 API 无改动，因此插件源码无需适配；`test/rc1-load.test.js` 用真实 rc.1 的 cordis/dsh-web 包导入并挂载插件，断言 provider 注册进了 `ctx.web` 注册表——语法检查无法发现宿主 API 改名，这个冒烟可以。
+- 宿主依赖按 peer 声明 `^0.2.1-rc.4 || ^0.2.2-alpha.2 || ^0.2.2-rc.1 || ^0.2.2-rc.3`（cordis `~4.0.5 || ~4.0.6-alpha.1 || ~4.1.0`、schemastery `^3.18.0 || ~3.18.6-alpha.1 || ~3.19.0`）。cordis 与 schemastery 走独立发版线，不跟随 dsh 版本号；rc.1 与 rc.3 宿主都使用 cordis 4.1.0 / schemastery 3.19.0。
+- 0.2.2-rc.1 的 web、credentials、launch-environment 三个宿主包相对 0.2.2-alpha.2 只有版本号变化，插件 API 无改动，因此插件源码无需适配；`test/dsh-load.test.js` 用真实 rc.3 的 cordis/dsh-web 包导入并挂载插件，断言 provider 注册进了 `ctx.web` 注册表——语法检查无法发现宿主 API 改名，这个冒烟可以。
+- 0.2.2-rc.3 的 web 包新增 provider 选择器元数据（`WebSearchProvider.title?` / `description?`）、`ctx.web.listProviders()` 与 `web/providers-changed` 事件；网页搜索与获取设置页按 provider 分别选择，默认搜索 provider 改为 `deepseek-search-api`。插件给 provider 补上可选的 `title`/`description`，设置页因此显示可读名称与说明；冒烟测试相应断言 `listProviders()` 列出 `{ id, title, description }`，并断言注册与销毁各触发一次 `web/providers-changed`。credentials/launch-environment 在 rc.3 无破坏性变化（`CredentialInfo` 只新增可选 `masked`；`resolve`/`credentialRef` 不变），`@deepseek-ai/dsh-llm` 的 `HarnessError` 迁到 `@deepseek-ai/dsh-error` 后仍从原路径再导出，`WebError` 用法不变。
 - 插件只有宿主半边：dsh 0.1.7 起设置页按插件 Config schema 自动生成表单，`dsh.client`、`./client` 导出与浏览器 bundle 均已删除。
 - 插件行的 profile 配置（bundle patch + profile 覆盖）是唯一配置来源；设置页保存会重载插件实例，`apply` 收到新配置。
 - 密钥字段用 `role('secret')`、引用名用 `role('credential-ref')`；解析顺序为内联 `apiKey` → DSH credentials domain → 启动环境变量。
@@ -129,11 +130,13 @@ BRAVE_API_KEY: <your-key>
 
 插件通过 `cordis.patch.yml`：
 
-- 注册 `search-mcp` provider。
+- 注册 `search-mcp` provider（带 rc.3 选择器元数据，设置页显示为 “Search MCP”）。
 - 设置 `web.searchProvider: search-mcp`。
 - 禁用 `web-search-deepseek`。
 - 保持 `web_fetch` 关闭。
 - 请求 `tool-web.searchMaxResults: 50` 和 `searchMaxQueries: 4`。
+
+0.2.2-rc.3 起宿主默认搜索 provider 是 `deepseek-search-api`，它由 `web-deepseek-api` 行注册，而该行没有按能力开关，因此本插件不禁用整行；`web` 行被整行替换后 `searchProvider` 固定为 `search-mcp`，默认搜索仍走 MCP，内置 provider 保留在选择菜单中供手动切换。
 
 RC2 的 standard、code、cordis agent preset 各自包含 `tool-web` 行，并且都省略了 `searchMaxResults` 和 `searchMaxQueries`，因此实际采用 `dsh-tool-web` 默认值 8 和 4。agent-scoped 工具会遮蔽根层同名工具，所以根层 patch 中的 50 条请求不会提高这些 shipped preset 的实际上限。验证结果上限时必须检查 session 使用的 preset，不能只依据根层 `--dump-config`。
 
@@ -145,7 +148,7 @@ npm run check
 npm pack --dry-run
 ```
 
-自动测试（`npm test`，21 个用例）覆盖 0.2.1-rc.4 / 0.2.2-alpha.2 / 0.2.2-rc.1 依赖锁定与宿主 config 解析、known/custom catalog 边界、provider 契约与结果数上限、结果归一化、URL/DNS/pinning 安全策略，以及在真实 rc.1 宿主包上的插件加载与 provider 注册冒烟。
+自动测试（`npm test`，21 个用例）覆盖 0.2.1-rc.4 / 0.2.2-alpha.2 / 0.2.2-rc.1 / 0.2.2-rc.3 依赖锁定与宿主 config 解析、known/custom catalog 边界、provider 契约（含 rc.3 选择器元数据）与结果数上限、结果归一化、URL/DNS/pinning 安全策略，以及在真实 rc.3 宿主包上的插件加载、provider 注册与清单冒烟。
 
 2026-08-30 的隔离 RC2 Web 冒烟检查确认：插件卡片可加载；默认 Tavily 行不显示链接或高级连接字段；DuckDuckGo 摘要显示“无需密钥”，展开后只有 ID、provider 和结果数；测试草稿已放弃且没有写入 settings。无密钥 DuckDuckGo stdio server 能启动并收到正确的 `duckduckgo_web_search`/`count` 调用，但当次公开搜索被 DuckDuckGo 上游异常流量检测拒绝，因此未取得可用于结果归一化验收的真实来源。
 

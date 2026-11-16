@@ -2,12 +2,19 @@
 # before the profile's own cordis.patch.yml (last write wins per row).
 #
 # Installing this package therefore REPLACES dsh's built-in web search:
-#   - the `web` row's searchProvider switches from `deepseek-official` to
-#     `search-mcp` (the provider registered by this plugin), and
-#   - the built-in DeepSeek search provider row is disabled.
+#   - the `web` row's searchProvider switches from the shipped default
+#     (`deepseek-search-api` in 0.2.2-rc.3, `deepseek-official` in earlier
+#     lines) to `search-mcp` (the provider registered by this plugin), and
+#   - the legacy DeepSeek Messages search provider row is disabled.
 # The model-facing `web_search` tool keeps its name and presentation; its
 # execution now goes through the search MCP server(s) configured below or in
 # the web Settings → Plugins → search-mcp section.
+#
+# 0.2.2-rc.3 keeps the DeepSeek Search/Fetch API providers registered through
+# the `web-deepseek-api` row (it has no per-capability switch), so they remain
+# selectable in the new provider menu; this patch does not disable that row.
+# The `web` row below pins `search-mcp`, so the composed default is still MCP
+# search, and `fetchProvider: http` keeps the anonymous fetcher.
 #
 # Removing this package (dsh plugin --profile web remove @letter2025/dsh-search-mcp)
 # drops this whole layer and restores the built-in search exactly.
@@ -40,12 +47,12 @@
   disabled: true
 
 # The model-facing web_search tool is owned by dsh-tool-web (its `Config`
-# default is a hard 8-source cap, enforced by dsh-web's seam on EVERY
-# request). This plugin takes over result sizing, so raise the tool layer's
-# cap to the plugin schema maximum: `search-mcp`'s own maxResults (Settings →
-# Plugins → search-mcp) then decides how many sources actually come back.
-# `fetch` stays disabled and the base timeout is restated, because a patch
-# replaces the targeted row's whole config.
+# default caps sources — 8 on 0.2.2-rc.1, 10 on 0.2.2-rc.3 — enforced by
+# dsh-web's seam on EVERY request). This plugin takes over result sizing, so
+# raise the tool layer's cap to the plugin schema maximum: `search-mcp`'s own
+# maxResults (Settings → Plugins → search-mcp) then decides how many sources
+# actually come back. `fetch` stays disabled and the base timeout is restated,
+# because a patch replaces the targeted row's whole config.
 - id: tool-web
   disabled: false
   config:

@@ -25,6 +25,11 @@ test('apply registers the web provider with the profile-row config', () => {
   assert.ok(captured);
   assert.equal(captured.id, SEARCH_MCP_PROVIDER_ID);
   assert.equal(captured.available(), true);
+  // dsh 0.2.2-rc.3 provider menus read these optional picker fields; an older
+  // host ignores them and displays the id instead.
+  assert.equal(captured.title, 'Search MCP');
+  assert.deepEqual(Object.keys(captured.description).sort(), ['en', 'zh']);
+  assert.match(captured.description.en, /search MCP server configured in this plugin/);
 });
 
 test('catalog exposes every supported provider preset', () => {
